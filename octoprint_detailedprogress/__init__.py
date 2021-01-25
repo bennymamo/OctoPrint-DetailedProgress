@@ -49,6 +49,16 @@ class DetailedProgress(octoprint.plugin.EventHandlerPlugin,
 			if not ip:
 				return
 			self._printer.commands("M117 IP {}".format(ip))
+		elif event == Events.PrintPaused:
+			if self._repeat_timer != None:
+				self._repeat_timer.cancel()
+				self._repeat_timer = None
+			self._logger.info("Printing paused. Detailed progress paused.")
+		elif event == Events.PrintResumed:
+			self._repeat_timer = octoprint.util.RepeatedTimer(self._settings.get_int(["time_to_change"]), self.do_work)
+			self._repeat_timer.start()
+			self._logger.info("Printing resumed. Detailed progress unpaused.")
+
 
 	def do_work(self):
 		if not self._printer.is_printing():
